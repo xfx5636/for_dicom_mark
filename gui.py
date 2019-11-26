@@ -38,6 +38,9 @@ class LabelTool():
         self.frame = Frame(self.parent)
         self.frame.pack(fill=BOTH, expand=1)
         self.parent.resizable(width=TRUE, height=TRUE)
+        self.patientID = getPatientCode(os.path.join(os.getcwd(), 'data', 'source'))
+        print(self.patientID)
+        # store patientID as a property
 
         # initialize global state
         self.imageDir = ''
@@ -153,7 +156,7 @@ class LabelTool():
             self.parent.focus()
             self.category = str(s)
         else:
-            s = r'E:/SearchQA/SearchQA/images/FDG34184'
+            s = os.path.join(os.getcwd(), 'images', str(self.patientID)) # r'E:/SearchQA/SearchQA/images/FDG34184'
         ##        if not os.path.isdir(s):
         ##            tkMessageBox.showerror("Error!", message = "The specified dir doesn't exist!")
         ##            return
@@ -178,7 +181,7 @@ class LabelTool():
         self.total = len(self.imageList)
 
         # set up output dir
-        self.outDir = os.path.join(r'./labels', '%s' % (self.category))
+        self.outDir = os.path.join(os.getcwd(),'labels', self.category)
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
             os.mkdir(os.path.join(self.outDir, 'ct'))
@@ -567,13 +570,13 @@ def align_ct_pt(ct_path):
         for file in os.listdir(ct_path):
             if file == '.DS_Store':
                 continue
-            if os.path.getsize(ct_path + file) >= 1049046:
+            if os.path.getsize(os.path.join(ct_path, file)) >= 1049046:
                 # print(os.path.getsize(ct_path + file))
-                os.remove(ct_path+file)
+                os.remove(os.path.join(ct_path, file))
                 continue
-            Y = pydicom.read_file(ct_path + file)
+            Y = pydicom.read_file(os.path.join(ct_path, file))
             if str(Y.SeriesDescription).split('-')[0] == 'Head' or 'Brain' in str(Y.SeriesDescription):
-                os.remove(ct_path+file)
+                os.remove(os.path.join(ct_path, file))
                 # print(Y.SeriesDescription)
                 continue
             # if str(Y.SliceLocation) + '.dcm' in os.listdir(ct_path):
@@ -586,7 +589,7 @@ def align_ct_pt(ct_path):
             #     plt.imshow(Y1.pixel_array)
             #     plt.show()
             #     break
-            os.rename(ct_path+file, ct_path + str(Y.SliceLocation)+'.'+file.split('.')[-1])
+            os.rename(os.path.join(ct_path, file), os.path.join(ct_path, str(Y.SliceLocation)+'.'+file.split('.')[-1]))
 
 
 def get_align_dicom(ct_path, pt_path, pt_new_path):
@@ -613,8 +616,8 @@ def get_align_dicom(ct_path, pt_path, pt_new_path):
     for file, val in ct_file:
         if count == 0 or count == len(ct_file)-1:
             if val <= pt_val[0] or val >= pt_val[-1]:
-                shutil.copyfile(pt_path+pt_file[count], pt_new_path+pt_file[count])
-                os.rename(pt_new_path + pt_file[count], pt_new_path + str(val) + '.dcm')
+                shutil.copyfile(os.path.join(pt_path, pt_file[count]), os.path.join(pt_new_path, pt_file[count]))
+                os.rename(os.path.join(pt_path, pt_file[count]), os.path.join(pt_new_path, str(val)+'.dcm'))
                 count += 1
                 continue
         for pt_i in range(len(pt_val)-1):
@@ -622,10 +625,10 @@ def get_align_dicom(ct_path, pt_path, pt_new_path):
                 pre_weight = 1.0*(pt_val[pt_i+1]-val)/(pt_val[pt_i+1] - pt_val[pt_i])
                 back_weigth = 1.0*(val-pt_val[pt_i])/(pt_val[pt_i+1] - pt_val[pt_i])
 
-                pre_dcm = pydicom.read_file(pt_path + pt_file[pt_i])
+                pre_dcm = pydicom.read_file(os.path.join(pt_path, pt_file[pt_i]))
                 pre_dcm_pix = pre_dcm.pixel_array
 
-                back_dcm = pydicom.read_file(pt_path + pt_file[pt_i+1])
+                back_dcm = pydicom.read_file(os.path.join(pt_path, pt_file[pt_i+1]))
                 back_dcm_pix = back_dcm.pixel_array
 
                 insert_pix = pre_weight*pre_dcm_pix + back_weigth*back_dcm_pix
@@ -663,19 +666,19 @@ def div_ct_pet(source_path, ct_path, pt_path):
     :return:
     """
     path = source_path
-    CT_file = open(r'E:\SearchQA/for_dicom_mark/for_dicom_mark/xml/ct.txt', 'w', encoding='utf8')
-    PET_file = open(r'E:\SearchQA/for_dicom_mark/for_dicom_mark/xml/pet.txt', 'w', encoding='utf8')
+    CT_file = open(os.path.join(os.getcwd(),'xml','ct.txt'), 'w', encoding='utf8')
+    PET_file = open(os.path.join(os.getcwd(),'xml','pet.txt'), 'w', encoding='utf8')
     for picture_name in os.listdir(path):
         if picture_name == '.DS_Store':
             continue
-        Y = pydicom.read_file(path + picture_name)
+        Y = pydicom.read_file(os.path.join(path, picture_name))
 
         if Y.Modality == 'CT':
-            shutil.copyfile(source_path + picture_name, ct_path + picture_name)
+            shutil.copyfile(os.path.join(source_path, picture_name), os.path.join(ct_path, picture_name))
             CT_file.write(picture_name + '\n')
         else:
             PET_file.write(picture_name + '\n')
-            shutil.copyfile(source_path + picture_name, pt_path + picture_name)
+            shutil.copyfile(os.path.join(source_path, picture_name), os.path.join(pt_path, picture_name))
     CT_file.close()
     PET_file.close()
 
@@ -798,28 +801,56 @@ def finally_save(patient_code, save_path, c_path, p_new_path, mark_result_path):
         writer.close()
     print('出错误的图片有：', error_list)
 
-
+def getPatientCode(source_path):
+    '''
+    To parse the Patient ID from dicom files in the folder specified
+    '''
+    Pcode = ''
+    for ii in os.listdir(source_path):
+        try:
+            dcm_content = pydicom.dcmread(os.path.join(source_path,ii))
+            Pcode = dcm_content.PatientID
+        except:
+            pass
+        if len(Pcode) > 1:
+            return Pcode
+        
 if __name__ == '__main__':
-    source_path = 'E:/SearchQA/for_dicom_mark/for_dicom_mark/data/FDG34184/'
-    patient_code = source_path.split('/')[-2]
-    base_path = 'E:/SearchQA/for_dicom_mark/for_dicom_mark/data/'
-    if not os.path.exists(base_path + patient_code + '_new'):
-        os.mkdir(base_path + patient_code + '_new')
-    patient_info_path = base_path + patient_code + '_new' + '/'
+    source_path = os.path.join(os.getcwd(),'data','source') #'E:/SearchQA/for_dicom_mark/for_dicom_mark/data/FDG34184/'
+    patient_code = getPatientCode(source_path)
+    base_path = os.path.join(os.getcwd(),'data')
+    image_path = os.path.join(os.getcwd(), 'images')
+    label_path = os.path.join(os.getcwd(), 'labels')
+    if not os.path.exists(os.path.join(base_path,patient_code+'_new')):
+        os.mkdir(os.path.join(base_path,patient_code+'_new'))
+    else:
+        shutil.rmtree(os.path.join(base_path,patient_code+'_new'))
+        os.mkdir(os.path.join(base_path,patient_code+'_new'))
+        shutil.rmtree(os.path.join(os.getcwd(), 'images',patient_code))
+        shutil.rmtree(os.path.join(os.getcwd(), 'labels',patient_code))
+    patient_info_path = os.path.join(base_path,patient_code+'_new')
     # 把病人的CT和PT图片分开
-    c_path = patient_info_path + 'ct/'
-    p_path = patient_info_path + 'pt/'
+    c_path = os.path.join(patient_info_path,'ct')
+    p_path = os.path.join(patient_info_path,'pt')
     if not os.path.exists(c_path):
         os.mkdir(c_path)
     if not os.path.exists(p_path):
         os.mkdir(p_path)
     # 存储插值后的图片
-    p_new_path = patient_info_path + 'pt_new/'
+    p_new_path = os.path.join(patient_info_path,'pt_new')
     if not os.path.exists(p_new_path):
         os.mkdir(p_new_path)
-    c_jpg_save_path = r'E:\SearchQA\for_dicom_mark\for_dicom_mark\images\FDG34184\ct'
-    p_jpg_save_path = r'E:\SearchQA\for_dicom_mark\for_dicom_mark\images\FDG34184\pt'
-    mark_result_path = r'E:\SearchQA\for_dicom_mark\for_dicom_mark\labels\FDG34184'
+    if not os.path.exists(os.path.join(image_path, patient_code)):
+        os.mkdir(os.path.join(image_path, patient_code))
+    c_jpg_save_path = os.path.join(image_path, patient_code, 'ct') # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\images\FDG34184\ct'
+    p_jpg_save_path = os.path.join(image_path, patient_code, 'pt') # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\images\FDG34184\pt'
+    mark_result_path = os.path.join(label_path, patient_code) # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\labels\FDG34184'
+    if not os.path.exists(c_jpg_save_path):
+        os.mkdir(c_jpg_save_path)
+    if not os.path.exists(p_jpg_save_path):
+        os.mkdir(p_jpg_save_path)
+    if not os.path.exists(mark_result_path):
+        os.mkdir(mark_result_path)
     print('====================开始分离CT和PT图片===========================\n')
     div_ct_pet(source_path=source_path, ct_path=c_path, pt_path=p_path)
     print('====================开始重命名CT图片===========================\n')
@@ -840,5 +871,5 @@ if __name__ == '__main__':
     tool = LabelTool(root)
     root.mainloop()
     finally_save(
-        patient_code=patient_code, save_path=r'E:\SearchQA\for_dicom_mark\for_dicom_mark\labels\%s\ct' % patient_code,
+        patient_code=patient_code, save_path=os.path.join(label_path, patient_code, 'ct'), # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\labels\%s\ct' % patient_code,
         c_path=c_path, p_new_path=p_new_path, mark_result_path=mark_result_path)
