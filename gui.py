@@ -244,6 +244,10 @@ class LabelTool():
         self.clearBBox()
         self.imagename = os.path.split(imagepath)[-1].strip('.jpg')
         labelname = self.imagename
+        if not os.path.exists(os.path.join(os.path.join(self.outDir, 'ct'))):
+            os.mkdir(os.path.join(os.path.join(self.outDir, 'ct')))
+        if not os.path.exists(os.path.join(os.path.join(self.outDir, 'pt'))):
+            os.mkdir(os.path.join(os.path.join(self.outDir, 'pt')))
         self.labelfilename = os.path.join(os.path.join(self.outDir, 'ct'), labelname+'_non_node.txt')
         self.labelfilename_node = os.path.join(os.path.join(self.outDir, 'ct'), labelname+'_node.txt')
         self.labelfilename_pt = os.path.join(os.path.join(self.outDir, 'pt'), labelname+'_non_node.txt')
