@@ -644,14 +644,14 @@ def get_align_dicom(ct_path, pt_path, pt_new_path):
                 else:
                     raise Exception("unknow Bits Allocated value in dicom header")
                 pre_dcm.PixelData = newimg.tobytes()
-                pre_dcm.save_as(pt_new_path+file)
+                pre_dcm.save_as(os.path.join(pt_new_path,file))
 
 
 def read_new_pt(pt_new_path):
     for file in os.listdir(pt_new_path):
         if file == '.DS_Store':
             continue
-        Y = pydicom.read_file(pt_new_path + file)
+        Y = pydicom.read_file(os.path.join(pt_new_path, file))
         y_pix = Y.pixel_array
         print(file, Y.SliceLocation)
         # for row in y_pix:
@@ -719,8 +719,8 @@ def finally_save(patient_code, save_path, c_path, p_new_path, mark_result_path):
             os.mkdir(save_path)
         if (picture_name.split('.dcm')[0] + '.xml') in os.listdir(save_path):
             continue
-        Y = pydicom.read_file(c_path + picture_name)
-        Y_1 = pydicom.read_file(p_new_path + picture_name)
+        Y = pydicom.read_file(os.path.join(c_path, picture_name))
+        Y_1 = pydicom.read_file(os.path.join(p_new_path, picture_name))
         Y_num = int(''.join(picture_name.split('.')).strip('dcm') + '1')
 
         mark_result_ct_path = os.path.join(mark_result_path, 'ct')

@@ -1,5 +1,16 @@
-# dicom
+# Images
 *.dcm
+*.jpg
+
+# Porcess folders
+data/*
+!data/source/
+images/*
+labels/*
+xml/*
+!xml/ct.txt
+!xml/pet.txt
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
