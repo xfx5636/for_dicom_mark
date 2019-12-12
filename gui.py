@@ -53,6 +53,8 @@ class LabelTool():
         self.cur = 0
         self.total = 0
         self.category = 0
+        self.center = -500
+        self.width = 2000
         self.imagename = ''
         self.labelfilename = ''
         self.labelfilename_node = ''
@@ -123,13 +125,25 @@ class LabelTool():
         self.goBtn.pack(side=LEFT)
         self.nodeBtn = Button(self.ctrPanel, text='标记非结点', command=self.switch_node)
         self.nodeBtn.pack(side=LEFT)
+        self.centerLabel = Label(self.ctrPanel, text="Center")
+        self.centerLabel.pack(side=LEFT, padx=5)
+        self.centerEntry = Entry(self.ctrPanel, width=5)
+        self.centerEntry.pack(side=LEFT)
+        self.goCenter = Button(self.ctrPanel, text='Go Center', command=self.get_center_val)
+        self.goCenter.pack(side=LEFT)
+        self.widthLabel = Label(self.ctrPanel, text="Width")
+        self.widthLabel.pack(side=LEFT, padx=5)
+        self.widthEntry = Entry(self.ctrPanel, width=5)
+        self.widthEntry.pack(side=LEFT)
+        self.goWidth = Button(self.ctrPanel, text='Go Width', command=self.get_width_val)
+        self.goWidth.pack(side=LEFT)
 
         # example pannel for illustration
         self.egPanel = Frame(self.frame, border=10)
         self.egPanel.grid(row=1, column=0, rowspan=5, sticky=N)
         self.tmpLabel2 = Label(self.egPanel, text="Slice Location:")
         self.listbox2 = Listbox(self.frame, width=28, height=6)
-        self.listbox2.grid(row=3, column=0, sticky=W+N)
+        self.listbox2.grid(row=3, column=0, sticky=W + N)
         self.tmpLabel2.pack(side=TOP, pady=5)
 
         self.egLabels = []
@@ -149,14 +163,13 @@ class LabelTool():
     ##        self.setImage()
     ##        self.loadDir()
 
-
     def loadDir(self, dbg=False):
         if not dbg:
             s = self.entry.get()
             self.parent.focus()
             self.category = str(s)
         else:
-            s = os.path.join(os.getcwd(), 'images', str(self.patientID)) # r'E:/SearchQA/SearchQA/images/FDG34184'
+            s = os.path.join(os.getcwd(), 'images', str(self.patientID))  # r'E:/SearchQA/SearchQA/images/FDG34184'
         ##        if not os.path.isdir(s):
         ##            tkMessageBox.showerror("Error!", message = "The specified dir doesn't exist!")
         ##            return
@@ -181,7 +194,7 @@ class LabelTool():
         self.total = len(self.imageList)
 
         # set up output dir
-        self.outDir = os.path.join(os.getcwd(),'labels', self.category)
+        self.outDir = os.path.join(os.getcwd(), 'labels', self.category)
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
             os.mkdir(os.path.join(self.outDir, 'ct'))
@@ -248,10 +261,10 @@ class LabelTool():
             os.mkdir(os.path.join(os.path.join(self.outDir, 'ct')))
         if not os.path.exists(os.path.join(os.path.join(self.outDir, 'pt'))):
             os.mkdir(os.path.join(os.path.join(self.outDir, 'pt')))
-        self.labelfilename = os.path.join(os.path.join(self.outDir, 'ct'), labelname+'_non_node.txt')
-        self.labelfilename_node = os.path.join(os.path.join(self.outDir, 'ct'), labelname+'_node.txt')
-        self.labelfilename_pt = os.path.join(os.path.join(self.outDir, 'pt'), labelname+'_non_node.txt')
-        self.labelfilename_pt_node = os.path.join(os.path.join(self.outDir, 'pt'), labelname+'_node.txt')
+        self.labelfilename = os.path.join(os.path.join(self.outDir, 'ct'), labelname + '_non_node.txt')
+        self.labelfilename_node = os.path.join(os.path.join(self.outDir, 'ct'), labelname + '_node.txt')
+        self.labelfilename_pt = os.path.join(os.path.join(self.outDir, 'pt'), labelname + '_non_node.txt')
+        self.labelfilename_pt_node = os.path.join(os.path.join(self.outDir, 'pt'), labelname + '_node.txt')
         self.nameBox.append(imagepath.split('\\')[-1])
         self.listbox2.insert(END, '%s' % imagepath.split('\\')[-1])
 
@@ -303,7 +316,8 @@ class LabelTool():
 
                                 tmpId = self.mainPanel.create_rectangle(tx0, ty0, tx1, ty1,
                                                                         width=2,
-                                                                        outline=COLORS[(len(self.bboxList) - 1) % len(COLORS)])
+                                                                        outline=COLORS[
+                                                                            (len(self.bboxList) - 1) % len(COLORS)])
 
                                 self.bboxIdList.append(tmpId)
                                 self.listbox.insert(END, '(%.2f,%.2f)-(%.2f,%.2f)' % (tmp[0], tmp[1], tmp[2], tmp[3]))
@@ -317,8 +331,8 @@ class LabelTool():
         print(self.bboxList)
         # print "-----2--self.bboxList---------"
         print('node num is : %d' % self.node_num)
-        node_list = self.bboxList[: len(self.bboxList)-self.node_num]
-        non_node_list = self.bboxList[(len(self.bboxList)-self.node_num):]
+        node_list = self.bboxList[: len(self.bboxList) - self.node_num]
+        non_node_list = self.bboxList[(len(self.bboxList) - self.node_num):]
         node_pt_list = []
         node_ct_list = []
         non_node_pt_list = []
@@ -362,8 +376,8 @@ class LabelTool():
             #
             # x1, x2 = x1 / DEST_SIZE[0], x2 / DEST_SIZE[0];
             # y1, y2 = y1 / DEST_SIZE[1], y2 / DEST_SIZE[1];
-            x1, x2 = min(self.STATE['x'], self.STATE['x']+1), max(self.STATE['x'], self.STATE['x']+1)
-            y1, y2 = min(self.STATE['y'], self.STATE['y']+1), max(self.STATE['y'], self.STATE['y']+1)
+            x1, x2 = min(self.STATE['x'], self.STATE['x'] + 1), max(self.STATE['x'], self.STATE['x'] + 1)
+            y1, y2 = min(self.STATE['y'], self.STATE['y'] + 1), max(self.STATE['y'], self.STATE['y'] + 1)
 
             x1, x2 = x1 / DEST_SIZE[0], x2 / DEST_SIZE[0]
             y1, y2 = y1 / DEST_SIZE[1], y2 / DEST_SIZE[1]
@@ -387,7 +401,7 @@ class LabelTool():
             if self.bboxId:
                 self.mainPanel.delete(self.bboxId)
             self.bboxId = self.mainPanel.create_rectangle(self.STATE['x'], self.STATE['y'],
-                                                          self.STATE['x']+1, self.STATE['y']+1,
+                                                          self.STATE['x'] + 1, self.STATE['y'] + 1,
                                                           width=2,
                                                           outline=COLORS[len(self.bboxList) % len(COLORS)])
 
@@ -444,12 +458,37 @@ class LabelTool():
         else:
             self.nodeBtn['text'] = '标记非节点'
 
-    ##    def setImage(self, imagepath = r'test2.png'):
-    ##        self.img = Image.open(imagepath)
-    ##        self.tkimg = ImageTk.PhotoImage(self.img)
-    ##        self.mainPanel.config(width = self.tkimg.width())
-    ##        self.mainPanel.config(height = self.tkimg.height())
-    ##        self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
+    def save_image_with_new_size(self):
+        path = self.imageCtList[self.cur - 1].strip('.jpg').split('\\')[-1]
+        img_data = getfile(os.path.join(c_path, path + '.dcm'))
+        img_temp = img_data
+        rows = len(img_temp)
+        cols = len(img_temp[0])
+        center, width = float(self.center), float(self.width)
+        img_temp.flags.writeable = True
+        min_val = (2 * center - width) / 2.0 + 0.5
+        max_val = (2 * center + width) / 2.0 + 0.5
+        d_factor = 255.0 / (max_val - min_val)
+        for i in np.arange(rows):
+            for j in np.arange(cols):
+                print(i,j)
+                img_temp[i, j] = int((img_temp[i, j] - min_val) * d_factor)
+                min_index = img_temp < 0
+                img_temp[min_index] = 0
+                max_index = img_temp > 255
+                img_temp[max_index] = 255
+        print(self.imageCtList[self.cur - 1])
+        cv2.imwrite(self.imageCtList[self.cur - 1], img_temp)
+
+    def get_center_val(self):
+        self.center = self.centerEntry.get()
+        self.save_image_with_new_size()
+        self.loadImage()
+
+    def get_width_val(self):
+        self.width = self.widthEntry.get()
+        self.save_image_with_new_size()
+        self.loadImage()
 
     def imgresize(self, w, h, w_box, h_box, pil_image):
         '''
@@ -464,6 +503,12 @@ class LabelTool():
         width = int(w * factor)
         height = int(h * factor)
         return pil_image.resize((width, height), Image.ANTIALIAS)
+
+
+def getfile(file):
+    dcm = pydicom.read_file(file)
+    img2 = dcm.pixel_array * dcm.RescaleSlope + dcm.RescaleIntercept
+    return img2
 
 
 def nothing(x):
@@ -593,7 +638,8 @@ def align_ct_pt(ct_path):
             #     plt.imshow(Y1.pixel_array)
             #     plt.show()
             #     break
-            os.rename(os.path.join(ct_path, file), os.path.join(ct_path, str(Y.SliceLocation)+'.'+file.split('.')[-1]))
+            os.rename(os.path.join(ct_path, file),
+                      os.path.join(ct_path, str(Y.SliceLocation) + '.' + file.split('.')[-1]))
 
 
 def get_align_dicom(ct_path, pt_path, pt_new_path):
@@ -618,24 +664,24 @@ def get_align_dicom(ct_path, pt_path, pt_new_path):
     pt_file, pt_val = list(zip(*pt_file))
     count = 0
     for file, val in ct_file:
-        if count == 0 or count == len(ct_file)-1:
+        if count == 0 or count == len(ct_file) - 1:
             if val <= pt_val[0] or val >= pt_val[-1]:
                 shutil.copyfile(os.path.join(pt_path, pt_file[count]), os.path.join(pt_new_path, pt_file[count]))
-                os.rename(os.path.join(pt_path, pt_file[count]), os.path.join(pt_new_path, str(val)+'.dcm'))
+                os.rename(os.path.join(pt_path, pt_file[count]), os.path.join(pt_new_path, str(val) + '.dcm'))
                 count += 1
                 continue
-        for pt_i in range(len(pt_val)-1):
-            if pt_val[pt_i] < val <= pt_val[pt_i+1]:
-                pre_weight = 1.0*(pt_val[pt_i+1]-val)/(pt_val[pt_i+1] - pt_val[pt_i])
-                back_weigth = 1.0*(val-pt_val[pt_i])/(pt_val[pt_i+1] - pt_val[pt_i])
+        for pt_i in range(len(pt_val) - 1):
+            if pt_val[pt_i] < val <= pt_val[pt_i + 1]:
+                pre_weight = 1.0 * (pt_val[pt_i + 1] - val) / (pt_val[pt_i + 1] - pt_val[pt_i])
+                back_weigth = 1.0 * (val - pt_val[pt_i]) / (pt_val[pt_i + 1] - pt_val[pt_i])
 
                 pre_dcm = pydicom.read_file(os.path.join(pt_path, pt_file[pt_i]))
                 pre_dcm_pix = pre_dcm.pixel_array
 
-                back_dcm = pydicom.read_file(os.path.join(pt_path, pt_file[pt_i+1]))
+                back_dcm = pydicom.read_file(os.path.join(pt_path, pt_file[pt_i + 1]))
                 back_dcm_pix = back_dcm.pixel_array
 
-                insert_pix = pre_weight*pre_dcm_pix + back_weigth*back_dcm_pix
+                insert_pix = pre_weight * pre_dcm_pix + back_weigth * back_dcm_pix
                 pre_dcm.SliceLocation = val
                 if pre_dcm[0x0028, 0x0100].value == 16:  # 如果dicom文件矩阵是16位格式
                     newimg = insert_pix.astype(np.uint16)  # newimg 是图像矩阵 ds是dcm
@@ -670,8 +716,8 @@ def div_ct_pet(source_path, ct_path, pt_path):
     :return:
     """
     path = source_path
-    CT_file = open(os.path.join(os.getcwd(),'xml','ct.txt'), 'w', encoding='utf8')
-    PET_file = open(os.path.join(os.getcwd(),'xml','pet.txt'), 'w', encoding='utf8')
+    CT_file = open(os.path.join(os.getcwd(), 'xml', 'ct.txt'), 'w', encoding='utf8')
+    PET_file = open(os.path.join(os.getcwd(), 'xml', 'pet.txt'), 'w', encoding='utf8')
     for picture_name in os.listdir(path):
         if picture_name == '.DS_Store':
             continue
@@ -766,14 +812,14 @@ def finally_save(patient_code, save_path, c_path, p_new_path, mark_result_path):
                 list_node_i += 1
                 ct_node = ct_node.strip().split()
                 add_nodules(dom, sub_dom2, list_node_i,
-                            [[float(ct_node[0])*DEST_SIZE[0], float(ct_node[1])*DEST_SIZE[1]]], modality=Y.Modality,
+                            [[float(ct_node[0]) * DEST_SIZE[0], float(ct_node[1]) * DEST_SIZE[1]]], modality=Y.Modality,
                             instance_number=Y.InstanceNumber, sop_instance_uid=str(Y.SOPInstanceUID))
         if len(node_pt_node_data) > 1:
             for pt_node in node_pt_node_data[1:]:
                 list_node_i += 1
                 pt_node = pt_node.strip().split()
                 add_nodules(dom, sub_dom2, list_node_i,
-                            [[(float(pt_node[0])-1)*DEST_SIZE[0], float(pt_node[1])*DEST_SIZE[1]]],
+                            [[(float(pt_node[0]) - 1) * DEST_SIZE[0], float(pt_node[1]) * DEST_SIZE[1]]],
                             modality=Y_1.Modality,
                             instance_number=Y_1.InstanceNumber, sop_instance_uid=str(Y_1.SOPInstanceUID))
         list_non_node_i = 0
@@ -782,7 +828,7 @@ def finally_save(patient_code, save_path, c_path, p_new_path, mark_result_path):
                 list_non_node_i += 1
                 ct_non_node = ct_non_node.strip().split()
                 add_non_nodules(dom, sub_dom2, list_non_node_i,
-                                [[float(ct_non_node[0])*DEST_SIZE[0], float(ct_non_node[1])*DEST_SIZE[1]]],
+                                [[float(ct_non_node[0]) * DEST_SIZE[0], float(ct_non_node[1]) * DEST_SIZE[1]]],
                                 modality=Y.Modality,
                                 instance_number=Y.InstanceNumber, sop_instance_uid=str(Y.SOPInstanceUID))
         if len(non_node_pt_node_data) > 1:
@@ -790,7 +836,7 @@ def finally_save(patient_code, save_path, c_path, p_new_path, mark_result_path):
                 list_node_i += 1
                 pt_non_node = pt_non_node.strip().split()
                 add_non_nodules(dom, sub_dom2, list_non_node_i,
-                                [[(float(pt_non_node[0])-1)*DEST_SIZE[0], float(pt_non_node[1])*DEST_SIZE[1]]],
+                                [[(float(pt_non_node[0]) - 1) * DEST_SIZE[0], float(pt_non_node[1]) * DEST_SIZE[1]]],
                                 modality=Y_1.Modality,
                                 instance_number=Y_1.InstanceNumber, sop_instance_uid=str(Y_1.SOPInstanceUID))
         Indent(dom, sub_dom1, 1)
@@ -805,6 +851,7 @@ def finally_save(patient_code, save_path, c_path, p_new_path, mark_result_path):
         writer.close()
     print('出错误的图片有：', error_list)
 
+
 def getPatientCode(source_path):
     '''
     To parse the Patient ID from dicom files in the folder specified
@@ -812,43 +859,48 @@ def getPatientCode(source_path):
     Pcode = ''
     for ii in os.listdir(source_path):
         try:
-            dcm_content = pydicom.dcmread(os.path.join(source_path,ii))
+            dcm_content = pydicom.dcmread(os.path.join(source_path, ii))
             Pcode = dcm_content.PatientID
         except:
             pass
         if len(Pcode) > 1:
             return Pcode
-        
+
+
 if __name__ == '__main__':
-    source_path = os.path.join(os.getcwd(),'data','source') #'E:/SearchQA/for_dicom_mark/for_dicom_mark/data/FDG34184/'
+    source_path = os.path.join(os.getcwd(), 'data',
+                               'source')  # 'E:/SearchQA/for_dicom_mark/for_dicom_mark/data/FDG34184/'
     patient_code = getPatientCode(source_path)
-    base_path = os.path.join(os.getcwd(),'data')
+    base_path = os.path.join(os.getcwd(), 'data')
     image_path = os.path.join(os.getcwd(), 'images')
     label_path = os.path.join(os.getcwd(), 'labels')
-    if not os.path.exists(os.path.join(base_path,patient_code+'_new')):
-        os.mkdir(os.path.join(base_path,patient_code+'_new'))
+    if not os.path.exists(os.path.join(base_path, patient_code + '_new')):
+        os.mkdir(os.path.join(base_path, patient_code + '_new'))
     else:
-        shutil.rmtree(os.path.join(base_path,patient_code+'_new'))
-        os.mkdir(os.path.join(base_path,patient_code+'_new'))
-        shutil.rmtree(os.path.join(os.getcwd(), 'images',patient_code))
-        shutil.rmtree(os.path.join(os.getcwd(), 'labels',patient_code))
-    patient_info_path = os.path.join(base_path,patient_code+'_new')
+        shutil.rmtree(os.path.join(base_path, patient_code + '_new'))
+        os.mkdir(os.path.join(base_path, patient_code + '_new'))
+        shutil.rmtree(os.path.join(os.getcwd(), 'images', patient_code))
+        shutil.rmtree(os.path.join(os.getcwd(), 'labels', patient_code))
+    patient_info_path = os.path.join(base_path, patient_code + '_new')
     # 把病人的CT和PT图片分开
-    c_path = os.path.join(patient_info_path,'ct')
-    p_path = os.path.join(patient_info_path,'pt')
+    c_path = os.path.join(patient_info_path, 'ct')
+    p_path = os.path.join(patient_info_path, 'pt')
     if not os.path.exists(c_path):
         os.mkdir(c_path)
     if not os.path.exists(p_path):
         os.mkdir(p_path)
     # 存储插值后的图片
-    p_new_path = os.path.join(patient_info_path,'pt_new')
+    p_new_path = os.path.join(patient_info_path, 'pt_new')
     if not os.path.exists(p_new_path):
         os.mkdir(p_new_path)
     if not os.path.exists(os.path.join(image_path, patient_code)):
         os.mkdir(os.path.join(image_path, patient_code))
-    c_jpg_save_path = os.path.join(image_path, patient_code, 'ct') # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\images\FDG34184\ct'
-    p_jpg_save_path = os.path.join(image_path, patient_code, 'pt') # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\images\FDG34184\pt'
-    mark_result_path = os.path.join(label_path, patient_code) # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\labels\FDG34184'
+    c_jpg_save_path = os.path.join(image_path, patient_code,
+                                   'ct')  # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\images\FDG34184\ct'
+    p_jpg_save_path = os.path.join(image_path, patient_code,
+                                   'pt')  # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\images\FDG34184\pt'
+    mark_result_path = os.path.join(label_path,
+                                    patient_code)  # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\labels\FDG34184'
     if not os.path.exists(c_jpg_save_path):
         os.mkdir(c_jpg_save_path)
     if not os.path.exists(p_jpg_save_path):
@@ -875,5 +927,6 @@ if __name__ == '__main__':
     tool = LabelTool(root)
     root.mainloop()
     finally_save(
-        patient_code=patient_code, save_path=os.path.join(label_path, patient_code, 'ct'), # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\labels\%s\ct' % patient_code,
+        patient_code=patient_code, save_path=os.path.join(label_path, patient_code, 'ct'),
+        # r'E:\SearchQA\for_dicom_mark\for_dicom_mark\labels\%s\ct' % patient_code,
         c_path=c_path, p_new_path=p_new_path, mark_result_path=mark_result_path)
